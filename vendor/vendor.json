@@ -1,0 +1,19 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"checksumSHA1": "gKyBj05YkfuLFruAyPZ4KV9nFp8=",
+			"path": "github.com/julienschmidt/httprouter",
+			"revision": "975b5c4c7c21c0e3d2764200bf2aa8e34657ae6e",
+			"revisionTime": "2017-04-30T22:20:11Z"
+		},
+		{
+			"checksumSHA1": "S/vsWsMTSoa2pwfiheH6SNivcFc=",
+			"path": "github.com/kyawmyintthein/orange",
+			"revision": "52718c462d268fc48c945d610ff8a31ae6b7bc87",
+			"revisionTime": "2017-07-13T10:40:58Z"
+		}
+	],
+	"rootPath": "orange-restapi-example"
+}
