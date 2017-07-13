@@ -169,15 +169,10 @@ func (app *App) handlePanic() {
 	})
 }
 
-// ServceHttp
-func (app *App) ServceHttp(res http.ResponseWriter, req *http.Request) {
-	app.httprouter.ServeHttp(res, req)
-}
-
 // Start: start http server
 func (app *App) Start(addr string) {
 	colorLog("[INFO] server start at: %s\n", addr)
-	if err := http.ListenAndServe(addr, app.router); err != nil {
+	if err := http.ListenAndServe(addr, app); err != nil {
 		panic(err)
 	}
 }

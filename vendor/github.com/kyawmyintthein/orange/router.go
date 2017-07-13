@@ -7,7 +7,6 @@ type Router struct {
 	app          *App
 	handlerFuncs []HandlerFunc
 	prefix       string
-	absolutePath string
 }
 
 func (r *Router) Use(middlewares ...HandlerFunc) {
@@ -123,4 +122,9 @@ func (r *Router) mergeHandlers(handlers []HandlerFunc) []HandlerFunc {
 		h[aLen+i] = handlers[i]
 	}
 	return h
+}
+
+// ServceHttp
+func (router *router) ServceHttp(res http.ResponseWriter, req *http.Request) {
+	router.app.httprouter.ServeHTTP(res, req)
 }
