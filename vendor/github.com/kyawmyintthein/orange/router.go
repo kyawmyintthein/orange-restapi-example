@@ -53,46 +53,17 @@ func (r *Router) Controller(path string, handlers ...HandlerFunc) *Router {
 	handlers = r.mergeHandlers(handlers)
 	return &Router{
 		handlerFuncs: handlers,
-		prefix:         r.path(path),
+		prefix:       r.path(path),
 		app:          r.app,
 	}
 }
 
-// //RouteNotFound call when route does not match
-// func (r *Router) RouteNotFound(h HandlerFunc) {
-// 	r.app.notfoundFunc = h
-// }
-
-// //Panic call when panic was called
-// func (r *Router) Panic(h PanicHandler) {
-// 	r.app.panicFunc = h
-// }
-
 //HandlerFunc convert http.HandlerFunc to ace.HandlerFunc
 func (r *Router) HTTPHandlerFunc(h http.HandlerFunc) HandlerFunc {
-	return func(ctx *context) {
+	return func(ctx *Context) {
 		h(ctx.response, ctx.request)
 	}
 }
-
-// //Static server static file
-// //path is url path
-// //root is root directory
-// func (r *Router) Static(path string, root http.Dir, handlers ...HandlerFunc) {
-// 	path = r.path(path)
-// 	fileServer := http.StripPrefix(path, http.FileServer(root))
-
-// 	handlers = append(handlers, func(c *C) {
-// 		fileServer.ServeHTTP(c.Writer, c.Request)
-// 	})
-
-// 	r.ace.httprouter.Handle("GET", r.staticPath(path), func(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
-// 		c := r.ace.createContext(w, req)
-// 		c.handlers = handlers
-// 		c.Next()
-// 		r.ace.pool.Put(c)
-// 	})
-// }
 
 //Handle handle with specific method
 func (r *Router) Handle(method, path string, handlers []HandlerFunc) {
@@ -125,6 +96,6 @@ func (r *Router) mergeHandlers(handlers []HandlerFunc) []HandlerFunc {
 }
 
 // ServceHttp
-func (router *Router) ServeHTTP(res http.ResponseWriter, req *http.Request) {
-	router.app.httprouter.ServeHTTP(res, req)
+func (r *Router) ServeHTTP(res http.ResponseWriter, req *http.Request) {
+	r.app.httprouter.ServeHTTP(res, req)
 }

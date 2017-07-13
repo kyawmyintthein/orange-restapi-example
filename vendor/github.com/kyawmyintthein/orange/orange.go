@@ -86,7 +86,7 @@ var (
 // bufffer pool
 //var bufPool = pool.NewBufferPool(100)
 
-type HandlerFunc func(ctx *context)
+type HandlerFunc func(ctx *Context)
 
 type App struct {
 	name       string
@@ -108,14 +108,14 @@ func NewApp(name string) *App {
 // defaultPool: load default pool
 func (app *App) defaultPool() {
 	app.pool.New = func() interface{} {
-		return &context{app: app, index: -1, data: nil}
+		return &Context{app: app, index: -1, data: nil}
 	}
 }
 
-// newContext: init new context for each request and response
-func (app *App) newContext(rw http.ResponseWriter, req *http.Request) *context {
-	var ctx *context
-	ctx = app.pool.Get().(*context)
+// newContext: init new Context for each request and response
+func (app *App) newContext(rw http.ResponseWriter, req *http.Request) *Context {
+	var ctx *Context
+	ctx = app.pool.Get().(*Context)
 	ctx.request = req
 	ctx.response = &Response{app: app}
 	ctx.Writer = ctx.response
@@ -131,12 +131,12 @@ func (app *App) newRouter() {
 	var (
 		hrouter *httprouter.Router
 	)
+	hrouter = httprouter.New()
 	app.router = &Router{
 		handlerFuncs: nil,
-		prefix:       "/",
-		app:          app,
+		prefix:   "/",
+		app:      app,
 	}
-	hrouter = httprouter.New()
 	app.httprouter = hrouter
 	app.handleNotFound()
 	app.handlePanic()
@@ -145,7 +145,7 @@ func (app *App) newRouter() {
 // handleNotFound:  hanlder function for not found
 func (app *App) handleNotFound() {
 	app.httprouter.NotFound = http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		var ctx *context
+		var ctx *Context
 		ctx = app.newContext(rw, req)
 		ctx.response.Header().Set(contentType, fmt.Sprintf("%s; charset=%s", ContentTypeJSON, charsetUTF8))
 		ctx.response.WriteHeader(http.StatusNotFound)
@@ -159,7 +159,7 @@ func (app *App) handleNotFound() {
 // handlePanic: handler function for panic
 func (app *App) handlePanic() {
 	app.httprouter.PanicHandler = func(rw http.ResponseWriter,req *http.Request,i interface {}){
-		var ctx *context
+		var ctx *Context
 		ctx = app.newContext(rw, req)
 		ctx.response.Header().Set(contentType, fmt.Sprintf("%s; charset=%s", ContentTypeJSON, charsetUTF8))
 		ctx.response.WriteHeader(http.StatusInternalServerError)
@@ -189,11 +189,14 @@ func (app *App) Namespace(path string) *Router {
 	router := Router{
 		handlerFuncs: nil,
 		prefix:       app.router.path(path),
-		app:          app.router.app,
+		app:          app,
 	}
+	colorLog("[WRAN]", router.prefix)
 	return &router
 }
 
 func (app *App) Use(middlewares ...HandlerFunc) {
 	app.router.handlerFuncs = append(app.router.handlerFuncs, middlewares...)
 }
+
+

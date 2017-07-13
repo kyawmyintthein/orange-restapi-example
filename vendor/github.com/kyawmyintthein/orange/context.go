@@ -32,69 +32,7 @@ const (
 	charsetUTF8 string = "UIF-8"
 )
 
-type Context interface {
-	// Request returns *Request
-	Request() *http.Request
-
-	// Response returns *Response.
-	Response() *Response
-
-	// Scheme returns http protocol scheme
-	Scheme() string
-
-	// ClientIP returns client IP address
-	ClientIP() string
-
-	// Path returns url path
-	Path() string
-
-	// Param returns a param
-	Param(name string) interface{}
-
-	// Params return all params
-	Params() map[string]interface{}
-
-	// QueryParam return a query string param
-	QueryParam(name string) url.Values
-
-	// QueryParams return all query string params
-	QueryParams() map[string]interface{}
-
-	// QueryString return query string
-	QueryString() string
-
-	FormValue(name string) interface{}
-
-	FormData() (url.Values, error)
-
-	File(name string) (*multipart.FileHeader, error)
-
-	MultipartForm() (*multipart.Form, error)
-
-	Cookie(name string) (*http.Cookie, error)
-
-	SecureCookie(name string) (*http.Cookie, error)
-
-	Cookies() []*http.Cookie
-
-	SetCookie(name, value string, others ...interface{})
-
-	SetSecureCookie(Secret, name, value string, others ...interface{})
-
-	ResponseJSON(status int, data interface{})
-
-	ResponseJSONP(status int, callback string, data interface{})
-
-	ResponseBytes(status int, contentType string, data []byte)
-
-	App() *App
-
-	Next()
-
-	Abort()
-}
-
-type context struct {
+type Context struct {
 	Writer       ResponseWriter
 	response     *Response
 	request      *http.Request
@@ -108,17 +46,17 @@ type context struct {
 }
 
 // Request: returns request
-func (ctx *context) Request() *http.Request {
+func (ctx *Context) Request() *http.Request {
 	return ctx.request
 }
 
 // Response: return response
-func (ctx *context) Response() *Response {
+func (ctx *Context) Response() *Response {
 	return ctx.response
 }
 
 // Scheme: return http protocol schame as string
-func (ctx *context) Scheme() string {
+func (ctx *Context) Scheme() string {
 	if ctx.IsTLS() {
 		return httpsProtocol
 	}
@@ -138,7 +76,7 @@ func (ctx *context) Scheme() string {
 }
 
 // ClientIP: return ip address of client
-func (ctx *context) ClientIP() string {
+func (ctx *Context) ClientIP() string {
 	var (
 		remoteAddress, ip string
 	)
@@ -154,12 +92,12 @@ func (ctx *context) ClientIP() string {
 }
 
 // Path: return url path
-func (ctx *context) Path() string {
+func (ctx *Context) Path() string {
 	return ctx.path
 }
 
 // ResponseJSON: response json to client
-func (ctx *context) ResponseJSON(status int, data interface{}) {
+func (ctx *Context) ResponseJSON(status int, data interface{}) {
 	ctx.response.Header().Set(contentType, fmt.Sprintf("%s; charset=%s", ContentTypeJSON, charsetUTF8))
 	ctx.response.WriteHeader(status)
 	if data == nil {
@@ -170,7 +108,7 @@ func (ctx *context) ResponseJSON(status int, data interface{}) {
 }
 
 // ResponseJSONP: response jsonp to client
-func (ctx *context) ResponseJSONP(status int, callback string, data interface{}) {
+func (ctx *Context) ResponseJSONP(status int, callback string, data interface{}) {
 	ctx.response.Header().Set(contentType, fmt.Sprintf("%s; charset=%s", ContentTypeJSON, charsetUTF8))
 	ctx.response.WriteHeader(status)
 	if data == nil {
@@ -181,19 +119,19 @@ func (ctx *context) ResponseJSONP(status int, callback string, data interface{})
 	ctx.response.Write(b)
 }
 
-func (ctx *context) ResponseBytes(status int, contentType string, data []byte) {
+func (ctx *Context) ResponseBytes(status int, contentType string, data []byte) {
 	ctx.response.Header().Set(HeaderContentType, contentType)
 	ctx.response.WriteHeader(status)
 	ctx.response.Write(data)
 }
 
 // Param: get param from route
-func (ctx *context) Param(name string) string {
+func (ctx *Context) Param(name string) string {
 	return ctx.params.ByName(name)
 }
 
 // Param: get all params from httprouter
-func (ctx *context) Params() map[string]interface{} {
+func (ctx *Context) Params() map[string]interface{} {
 	var params = make(map[string]interface{})
 	for _, param := range ctx.params {
 		params[param.Key] = param.Value
@@ -202,27 +140,27 @@ func (ctx *context) Params() map[string]interface{} {
 }
 
 // QueryParam: get parameter by name from query string
-func (ctx *context) QueryParam(name string) string {
+func (ctx *Context) QueryParam(name string) string {
 	return ctx.request.URL.Query().Get(name)
 }
 
 // QueryParams: get all query string parameters
-func (ctx *context) QueryParams() url.Values {
+func (ctx *Context) QueryParams() url.Values {
 	return ctx.request.URL.Query()
 }
 
 // QueryParams: get query string
-func (ctx *context) QueryString() string {
+func (ctx *Context) QueryString() string {
 	return ctx.request.URL.RawQuery
 }
 
 // FormValue: return form value as string
-func (ctx *context) FormValue(name string) string {
+func (ctx *Context) FormValue(name string) string {
 	return ctx.request.FormValue(name)
 }
 
 // FormData: return form values
-func (ctx *context) FormData() (url.Values, error) {
+func (ctx *Context) FormData() (url.Values, error) {
 	var err error
 	if strings.HasPrefix(ctx.request.Header.Get(HeaderContentType), MIMEMultipartForm) {
 		if err = ctx.request.ParseMultipartForm(defaultMemory); err != nil {
@@ -236,29 +174,29 @@ func (ctx *context) FormData() (url.Values, error) {
 	return ctx.request.Form, nil
 }
 
-func (ctx *context) File(name string) (*multipart.FileHeader, error) {
+func (ctx *Context) File(name string) (*multipart.FileHeader, error) {
 	_, fileheader, err := ctx.request.FormFile(name)
 	return fileheader, err
 }
 
-func (ctx *context) MultipartForm() (*multipart.Form, error) {
+func (ctx *Context) MultipartForm() (*multipart.Form, error) {
 	err := ctx.request.ParseMultipartForm(defaultMemory)
 	return ctx.request.MultipartForm, err
 }
 
-func (ctx *context) Cookie(name string) (*http.Cookie, error) {
+func (ctx *Context) Cookie(name string) (*http.Cookie, error) {
 	return ctx.request.Cookie(name)
 }
 
-func (ctx *context) Cookies() []*http.Cookie {
+func (ctx *Context) Cookies() []*http.Cookie {
 	return ctx.request.Cookies()
 }
 
-func (ctx *context) App() *App {
+func (ctx *Context) App() *App {
 	return ctx.app
 }
 
-func (ctx *context) Next() {
+func (ctx *Context) Next() {
 	ctx.index++
 	s := int8(len(ctx.handlerFuncs))
 	for ; ctx.index < s; ctx.index++ {
@@ -266,10 +204,10 @@ func (ctx *context) Next() {
 	}
 }
 
-func (ctx *context) Abort() {
+func (ctx *Context) Abort() {
 	ctx.index = abortIndex
 }
 
-func (ctx *context) IsTLS() bool {
+func (ctx *Context) IsTLS() bool {
 	return false
 }
