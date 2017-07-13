@@ -95,6 +95,7 @@ type Context interface {
 }
 
 type context struct {
+	Writer       ResponseWriter
 	response     *Response
 	request      *http.Request
 	query        url.Values
@@ -160,8 +161,7 @@ func (ctx *context) Path() string {
 // ResponseJSON: response json to client
 func (ctx *context) ResponseJSON(status int, data interface{}) {
 	ctx.response.Header().Set(contentType, fmt.Sprintf("%s; charset=%s", ContentTypeJSON, charsetUTF8))
-	ctx.response.status = status
-	ctx.response.WriteHeader()
+	ctx.response.WriteHeader(status)
 	if data == nil {
 		return
 	}
@@ -172,8 +172,7 @@ func (ctx *context) ResponseJSON(status int, data interface{}) {
 // ResponseJSONP: response jsonp to client
 func (ctx *context) ResponseJSONP(status int, callback string, data interface{}) {
 	ctx.response.Header().Set(contentType, fmt.Sprintf("%s; charset=%s", ContentTypeJSON, charsetUTF8))
-	ctx.response.status = status
-	ctx.response.WriteHeader()
+	ctx.response.WriteHeader(status)
 	if data == nil {
 		return
 	}
@@ -184,9 +183,7 @@ func (ctx *context) ResponseJSONP(status int, callback string, data interface{})
 
 func (ctx *context) ResponseBytes(status int, contentType string, data []byte) {
 	ctx.response.Header().Set(HeaderContentType, contentType)
-
-	ctx.response.status = status
-	ctx.response.WriteHeader()
+	ctx.response.WriteHeader(status)
 	ctx.response.Write(data)
 }
 

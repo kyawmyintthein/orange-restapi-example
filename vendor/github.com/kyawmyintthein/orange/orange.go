@@ -87,16 +87,19 @@ var (
 //var bufPool = pool.NewBufferPool(100)
 
 type HandlerFunc func(ctx *context)
+
 type App struct {
+	name       string
 	router     *Router
 	httprouter *httprouter.Router
 	pool       sync.Pool
 }
 
 // New: init new app object
-func New() *App {
+func NewApp(name string) *App {
 	var app *App
 	app = new(App)
+	app.name = name
 	app.defaultPool()
 	app.newRouter()
 	return app
@@ -105,19 +108,20 @@ func New() *App {
 // defaultPool: load default pool
 func (app *App) defaultPool() {
 	app.pool.New = func() interface{} {
-		return &context{app: app}
+		return &context{app: app, index: -1, data: nil}
 	}
 }
 
 // newContext: init new context for each request and response
 func (app *App) newContext(rw http.ResponseWriter, req *http.Request) *context {
 	var ctx *context
-	ctx = new(context)
 	ctx = app.pool.Get().(*context)
 	ctx.request = req
 	ctx.response = &Response{app: app}
+	ctx.Writer = ctx.response
 	ctx.index = -1
 	ctx.data = nil
+	ctx.response.reset(rw)
 	ctx.app = app
 	return ctx
 }
@@ -144,8 +148,7 @@ func (app *App) handleNotFound() {
 		var ctx *context
 		ctx = app.newContext(rw, req)
 		ctx.response.Header().Set(contentType, fmt.Sprintf("%s; charset=%s", ContentTypeJSON, charsetUTF8))
-		ctx.response.status = http.StatusNotFound
-		ctx.response.WriteHeader()
+		ctx.response.WriteHeader(http.StatusNotFound)
 		ctx.Next()
 		b, _ := json.Marshal(notFoundError)
 		ctx.response.Write(b)
@@ -155,24 +158,22 @@ func (app *App) handleNotFound() {
 
 // handlePanic: handler function for panic
 func (app *App) handlePanic() {
-	app.httprouter.PanicHandler = http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+	app.httprouter.PanicHandler = func(rw http.ResponseWriter,req *http.Request,i interface {}){
 		var ctx *context
 		ctx = app.newContext(rw, req)
 		ctx.response.Header().Set(contentType, fmt.Sprintf("%s; charset=%s", ContentTypeJSON, charsetUTF8))
-		ctx.response.status = http.StatusInternalServerError
-		ctx.response.WriteHeader()
+		ctx.response.WriteHeader(http.StatusInternalServerError)
 		ctx.Next()
-
-		b, _ := json.Marshal(internalServerError)
+		b, _ := json.Marshal(i)
 		ctx.response.Write(b)
 		app.pool.Put(ctx)
-	})
+	}
 }
 
 // Start: start http server
 func (app *App) Start(addr string) {
 	colorLog("[INFO] server start at: %s\n", addr)
-	if err := http.ListenAndServe(addr, app); err != nil {
+	if err := http.ListenAndServe(addr, app.router); err != nil {
 		panic(err)
 	}
 }
@@ -184,18 +185,15 @@ func (app *App) StartTLS(addr string, cert string, key string) {
 	}
 }
 
-func (app *App) Namespace(path string, handlers ...HandlerFunc) *Router {
-	handlers = app.router.mergeHandlers(handlers)
+func (app *App) Namespace(path string) *Router {
 	router := Router{
-		handlerFuncs: handlers,
-		name:         r.path(path),
-		app:          r.app,
+		handlerFuncs: nil,
+		prefix:       app.router.path(path),
+		app:          app.router.app,
 	}
-
-	router.Use(middlewares)
 	return &router
 }
 
 func (app *App) Use(middlewares ...HandlerFunc) {
-	app.router.handlerFuncs = append(r.handlerFuncs, middlewares)
+	app.router.handlerFuncs = append(app.router.handlerFuncs, middlewares...)
 }
