@@ -2,7 +2,7 @@ package main
 
 import "github.com/kyawmyintthein/orange"
 import "net/http"
-import "log"
+// import "log"
 var App *orange.App
 var ns_v1 *orange.Router
 
@@ -12,16 +12,16 @@ func main() {
 
 func init() {
 	App = orange.NewApp("Test")
-	log.Printf("App %+v", App)
+	// log.Printf("App %+v", App)
 	ns_v1 = App.Namespace("/v1")
 	var objectController = ns_v1.Controller("/objects")
 	objectController.GET("/", func(ctx *orange.Context) {
-		ctx.ResponseJSON(http.StatusOK, map[string]interface{}{"Object": "Value"})
+		ctx.JSON(http.StatusOK, map[string]interface{}{"Object": "Value"})
 	})
 
 	objectController.GET("/:name", func(ctx *orange.Context) {
 		name := ctx.Param("name")
-		ctx.ResponseJSON(http.StatusOK, map[string]interface{}{"name": name})
+		ctx.JSON(http.StatusOK, map[string]interface{}{"name": name})
 	})
 }
 
