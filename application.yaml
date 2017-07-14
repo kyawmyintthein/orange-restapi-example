@@ -1,0 +1,4 @@
+app:
+  name: "Orange App Test"
+  envs: ["dev", "stag", "prod"]
+  env: "dev"
