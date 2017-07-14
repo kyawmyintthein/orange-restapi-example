@@ -5,15 +5,15 @@ import "net/http"
 import "log"
 var App *orange.App
 var ns_v1 *orange.Router
-
+var config *orange.Config
 func main() {
-	App.Start("localhost:3000")
+	App.Start(config.GetString("app.dev.address"))
 }
 
 func init() {
 	App = orange.NewApp("Test")
 	log.Printf("Default ENV %+v \n", App.ENV())
-	config := App.AppConfig()
+	config = App.AppConfig()	
 	log.Printf("Config %+v \n", config)
 	log.Printf("App Name %+v \n", config.GetString("app.name"))
 	var dbConfig *orange.Config

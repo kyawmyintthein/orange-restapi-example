@@ -2,3 +2,6 @@ app:
   name: "Orange App Test"
   envs: ["dev", "stag", "prod"]
   env: "dev"
+  version: 1.0.0
+  dev: 
+    address: localhost:3000

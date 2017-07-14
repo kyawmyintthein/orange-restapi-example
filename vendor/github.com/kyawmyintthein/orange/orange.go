@@ -26,6 +26,7 @@ var bufPool = newBufferPool(100)
 
 type App struct {
 	name       string
+	version    string
 	rootDir    string
 	env        string
 	envs       []string
@@ -219,5 +220,10 @@ func (app *App) AppConfig() *Config{
 // AppConfig: load config
 func (app *App) ENV() string{
 	return app.env
+}
+
+// Version: get version
+func (app *App) Version() string{
+	return app.version
 }
 
